@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -105,11 +106,12 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         try {
             seleccion = scanner.nextInt();
             scanner.nextLine();
-        } catch (Exception e) {
-            scanner.nextLine();
+        } catch (InputMismatchException e) {
+            scanner.nextLine(); // limpia el buffer
             System.out.println("Entrada inválida. Por favor, ingrese un número.");
             return 0;
         }
+
         return seleccion;
     }
 
