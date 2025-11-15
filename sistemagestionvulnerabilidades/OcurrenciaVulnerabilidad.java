@@ -3,8 +3,9 @@ package sistemagestionvulnerabilidades;
 import java.time.LocalDateTime; // Importación para manejar fechas y horas
 
 import sistemagestionvulnerabilidades.dispositivos.Dispositivo;
+import sistemagestionvulnerabilidades.auditoria.Auditable;
 
-public class OcurrenciaVulnerabilidad {  // Clase que representa una ocurrencia de vulnerabilidad en un dispositivo
+public class OcurrenciaVulnerabilidad implements Auditable {  // Clase que representa una ocurrencia de vulnerabilidad en un dispositivo
     private int id;
     private String descripcion;
     private Vulnerabilidad vulnerabilidad;
@@ -46,6 +47,20 @@ public class OcurrenciaVulnerabilidad {  // Clase que representa una ocurrencia 
 
     public LocalDateTime getMomentoDeteccion() { // Getter para el momento de detección
         return momentoDeteccion;
+    }
+
+    @Override
+    public String generarAuditoriaCompleta() {
+        return String.format(
+            "[Ocurrencia ID:%s] Vul:'%s' | Dispositivo:%s (%s) | Criticidad:%s | Fecha:%s | Desc:%s",
+            getId(),
+            getVulnerabilidad().getNombre(),
+            getDispositivo().getNombre(),
+            getDispositivo().getClass().getSimpleName(),
+            getCriticidad(),
+            getMomentoDeteccion().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+            getDescripcion() != null ? getDescripcion() : "Sin descripción"
+        );
     }
 
     public boolean esDuplicada(OcurrenciaVulnerabilidad otra) { // Método para verificar si esta ocurrencia es duplicada de otra

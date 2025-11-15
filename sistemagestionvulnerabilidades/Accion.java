@@ -3,10 +3,11 @@
 
 package sistemagestionvulnerabilidades;
 
+import sistemagestionvulnerabilidades.auditoria.Auditable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Accion {
+public class Accion implements Auditable {
     private int id; //Identificador único de la acción
     private String tipo; //Tipo de acción (por ejemplo, parche, actualización, configuración)
     private String responsable; //Persona o equipo responsable de llevar a cabo la acción
@@ -79,5 +80,24 @@ public class Accion {
     }
     public void eliminarOcurrenciaVulnerabilidad(OcurrenciaVulnerabilidad ocurrencia) {
         this.ocurrenciasVulnerabilidades.remove(ocurrencia);
+    }
+
+    @Override
+    public String generarAuditoriaCompleta() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format(
+            "[Acción ID:%s] Tipo:%s | Responsable:%s | Estado:%s | Ocurrencias asociadas: ",
+            getId(), getTipo(), getResponsable(), getEstado()
+        ));
+        
+        if (getOcurrenciasVulnerabilidades().isEmpty()) {
+            sb.append("ninguna");
+        } else {
+            sb.append(getOcurrenciasVulnerabilidades().stream()
+                .map(String::valueOf)
+                .collect(java.util.stream.Collectors.joining(", ")));
+        }
+        
+        return sb.toString();
     }
 }

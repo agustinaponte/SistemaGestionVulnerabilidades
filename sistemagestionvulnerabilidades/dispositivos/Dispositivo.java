@@ -2,11 +2,21 @@
 // La clase Dispositivo representa un dispositivo en el sistema de gestión de vulnerabilidades.
 
 package sistemagestionvulnerabilidades.dispositivos;
+import sistemagestionvulnerabilidades.auditoria.Auditable;
 
-public abstract class Dispositivo { // Clase abstracta para representar un dispositivo genérico
+import java.util.ArrayList;
+import java.util.List;
+
+import sistemagestionvulnerabilidades.Main;
+import sistemagestionvulnerabilidades.OcurrenciaVulnerabilidad;
+
+
+
+public abstract class Dispositivo implements Auditable { // Clase abstracta para representar un dispositivo genérico
     protected String id;
     protected String nombre;
     private static int contadorId = 1; // Atributo estático para garantizar que los IDs sean únicos
+    private List<OcurrenciaVulnerabilidad> ocurrencias = new ArrayList<>();
 
     public Dispositivo(String nombre) { // Constructor que asigna un ID único automáticamente
         this.id = "D" + contadorId++;
@@ -23,8 +33,28 @@ public abstract class Dispositivo { // Clase abstracta para representar un dispo
 
     public abstract String getDetallesEspecificos(); // Método abstracto para redefinición en subclases
 
+    public List<OcurrenciaVulnerabilidad> getOcurrencias() {
+        return ocurrencias;
+    }
+
+    public void addOcurrencia(OcurrenciaVulnerabilidad o) {
+        ocurrencias.add(o);
+    }
+
     @Override
     public String toString() { // Método toString para representar el dispositivo como una cadena de texto
         return "Dispositivo [ID: " + id + ", Nombre: " + nombre + ", Detalles: " + getDetallesEspecificos() + "]";
     }
+
+    @Override
+        public String generarAuditoriaCompleta() {
+            long vulnerabilidadesCount = ocurrencias.stream()
+                .filter(o -> o.getDispositivo().equals(this))
+                .count();
+                
+            return String.format(
+                "[Dispositivo %s] %s | Tipo: %s | %s | Total vulnerabilidades: %d",
+                getId(), getNombre(), getClass().getSimpleName(), getDetallesEspecificos(), vulnerabilidadesCount
+            );
+        }
 }

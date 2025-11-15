@@ -5,6 +5,7 @@ import sistemagestionvulnerabilidades.dispositivos.Endpoint;
 import sistemagestionvulnerabilidades.dispositivos.Impresora;
 import sistemagestionvulnerabilidades.dispositivos.Router;
 import sistemagestionvulnerabilidades.dispositivos.Servidor;
+import sistemagestionvulnerabilidades.auditoria.Auditable;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -59,6 +60,9 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
                     generarInformeCompleto(scanner);
                     break;
                 case 5:
+                    generarAuditoriaCompleta(scanner);
+                    break;
+                case 6:
                     salir = true;
                     System.out.println("Saliendo del sistema...");
                     break;
@@ -88,7 +92,8 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
             "2. Cargar una nueva ocurrencia de vulnerabilidad",
             "3. Cargar una nueva acción",
             "4. Generar informe completo",
-            "5. Salir",
+            "5. Generar informe de auditoria",
+            "6. Salir",
         };
         int seleccion = 0;
 
@@ -96,7 +101,7 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         for (String opcion : opciones) {
             System.out.println(opcion);
         }
-        System.out.print("Seleccione una opción (1-5): ");
+        System.out.print("Seleccione una opción (1-6): ");
         try {
             seleccion = scanner.nextInt();
             scanner.nextLine();
@@ -418,6 +423,44 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
             }
         }
         return null;
+    }
+
+    private static void generarAuditoriaCompleta(Scanner scanner) {
+        System.out.println("\n" + "=".repeat(70));
+        System.out.println("           AUDITORÍA COMPLETA DEL SISTEMA");
+        System.out.println("=".repeat(70));
+
+        List<Auditable> auditables = new ArrayList<>();
+
+        // Añadimos uno por uno
+        for (OcurrenciaVulnerabilidad o : ocurrencias) {
+            auditables.add(o);
+        }
+        for (Accion a : acciones) {
+            auditables.add(a);
+        }
+        for (Dispositivo d : dispositivos) {
+            auditables.add(d);
+        }
+        for (Vulnerabilidad v : vulnerabilidades) {
+            auditables.add(v);
+        }
+
+        // Ordenamos por tipo de clase
+        auditables.sort(Comparator.comparing(a -> a.getClass().getSimpleName()));
+
+        // Imprimimos
+        for (Auditable a : auditables) {
+            System.out.println(a.generarAuditoriaCompleta());
+        }
+
+        System.out.println("=".repeat(70));
+        System.out.println("Presione Enter para volver...");
+        scanner.nextLine();
+    }
+
+    public static List<OcurrenciaVulnerabilidad> getOcurrencias() {
+        return ocurrencias;
     }
 
     private static Dispositivo cargarDispositivo(Scanner scanner) { // Método para cargar un nuevo dispositivo
