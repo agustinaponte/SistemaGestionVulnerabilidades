@@ -3,14 +3,10 @@
 
 package sistemagestionvulnerabilidades.dispositivos;
 import sistemagestionvulnerabilidades.auditoria.Auditable;
+import sistemagestionvulnerabilidades.OcurrenciaVulnerabilidad;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import sistemagestionvulnerabilidades.Main;
-import sistemagestionvulnerabilidades.OcurrenciaVulnerabilidad;
-
-
 
 public abstract class Dispositivo implements Auditable { // Clase abstracta para representar un dispositivo genérico
     protected String id;
