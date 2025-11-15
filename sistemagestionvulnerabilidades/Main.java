@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 public class Main { // Clase principal del sistema de gestión de vulnerabilidades
@@ -174,7 +175,14 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         if (inputDis.equalsIgnoreCase("nuevo")) {
             dispositivo = cargarDispositivo(scanner);
         } else {
-            dispositivo = buscarDispositivo(inputDis);
+            try {
+                dispositivo = buscarDispositivo(inputDis);
+            } catch (NoSuchElementException e) {
+                System.out.println(e.getMessage());
+                return;
+            }
+
+
             if (dispositivo == null) {
                 System.out.println("Dispositivo no encontrado.");
                 System.out.println("Presione Enter para volver al menú principal...");
@@ -406,17 +414,18 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
                 return v;
             }
         }
-        return null;
+        throw new NoSuchElementException("No existe una vulnerabilidad con ID: " + id);
     }
 
-    private static Dispositivo buscarDispositivo(String id) { // Método para buscar un dispositivo por ID
+    private static Dispositivo buscarDispositivo(String id) {
         for (Dispositivo d : dispositivos) {
             if (d.getId().equals(id)) {
                 return d;
             }
         }
-        return null;
+        throw new NoSuchElementException("No existe un dispositivo con ID: " + id);
     }
+
 
     private static OcurrenciaVulnerabilidad buscarOcurrencia(int id) { // Método para buscar una ocurrencia por ID
         for (OcurrenciaVulnerabilidad o : ocurrencias) {
@@ -523,4 +532,5 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         System.out.println("Dispositivo cargado exitosamente con ID: " + dispositivo.getId());
         return dispositivo;
     }
+
 }
