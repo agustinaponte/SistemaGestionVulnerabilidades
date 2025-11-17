@@ -1,0 +1,14 @@
+SERVIDOR;Servidor Web Principal;
+ENDPOINT;Estación de Trabajo Finanzas;
+ROUTER;Router Perimetral;
+SERVIDOR;Servidor de Base de Datos;
+SERVIDOR;Servidor de Aplicaciones CRM;
+ENDPOINT;Estación de Trabajo RRHH;
+ROUTER;Firewall Central;
+SERVIDOR;Servidor de Correo;
+ROUTER;Switch de Red Core;
+ENDPOINT;Estación de Trabajo Desarrollo;
+SERVIDOR;Servidor de Backups;
+ROUTER;Access Point Corporativo;
+SERVIDOR;Servidor de Archivos;
+ENDPOINT;Estación de Trabajo Gerencia;

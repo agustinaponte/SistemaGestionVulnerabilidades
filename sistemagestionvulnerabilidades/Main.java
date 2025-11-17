@@ -8,7 +8,6 @@ import sistemagestionvulnerabilidades.dispositivos.Servidor;
 import sistemagestionvulnerabilidades.auditoria.Auditable;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -120,7 +119,7 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         for (String opcion : opciones) {
             System.out.println(opcion);
         }
-        System.out.print("Seleccione una opción (1-6): ");
+        System.out.print("Seleccione una opción (0-7): ");
         try {
             seleccion = scanner.nextInt();
             scanner.nextLine();
@@ -573,138 +572,101 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
     }
 
     private static void importar(String nombreArchivo) {
+    /**
+     * Importa dispositivos desde un archivo de texto.
+     * Cada línea debe tener el formato: TIPO;Nombre;
+     * Ejemplo:  SERVIDOR;Servidor Web Principal;
+     *
+     * El método crea los objetos correspondientes según el TIPO
+     * y genera un resumen al finalizar.
+     */
+        // Contadores para el resumen final
         int countServ = 0;
         int countEndp = 0;
         int countRout = 0;
         int countOtros = 0;
-        
+
+        // Se usa try-with-resources. Este uso de try garantiza que el archivo se cierre automáticamente aunque suceda un error dentro del bloque
         try (BufferedReader br = new BufferedReader(new FileReader(nombreArchivo))) {
 
             String linea;
 
+            // Leer línea por línea hasta que no haya más contenido
             while ((linea = br.readLine()) != null) {
+
+                // Quitar espacios innecesarios al inicio y final
                 linea = linea.trim();
 
+                // Ignorar líneas vacías
                 if (linea.isEmpty()) continue;
+
+                // Ignorar líneas sin separador ;
                 if (!linea.contains(";")) continue;
 
+                // Separar por ; para obtener tipo y nombre
                 String[] partes = linea.split(";");
+
+                // Se esperan al menos dos elementos: tipo y nombre
                 if (partes.length < 2) continue;
 
+                // Obtener tipo y normalizar a mayúsculas
                 String tipo = partes[0].trim().toUpperCase();
+
+                // Obtener nombre del dispositivo
                 String nombre = partes[1].trim();
 
-                Dispositivo nuevo = null;
+                Dispositivo nuevo = null;  // El dispositivo que se creará
 
+                // Determinar qué dispositivo crear según el tipo importado
                 switch (tipo) {
                     case "SERVIDOR":
-                        // No tenemos dato del SO, usamos uno genérico
+                        // Se usa un valor por defecto para sistema operativo
                         nuevo = new Servidor(nombre, "No especificado");
                         countServ++;
                         break;
 
                     case "ENDPOINT":
-                        // No tenemos usuario asignado, usamos uno genérico
+                        // Para endpoints se asigna "Usuario" como propietario por defecto
                         nuevo = new Endpoint(nombre, "Usuario");
                         countEndp++;
                         break;
 
                     case "ROUTER":
-                        // No tenemos cantidad de puertos, usamos un número genérico
+                        // Para routers se asigna por defecto 4 puertos
                         nuevo = new Router(nombre, 4);
                         countRout++;
                         break;
 
                     default:
-                        // Por si más adelante agregas más tipos
+                        // Si el tipo no es válido, se ignora la línea
                         System.out.println("Tipo desconocido, ignorando: " + tipo);
                         countOtros++;
-                        continue;
+                        continue; // Saltar al próximo dispositivo
                 }
 
+                // Agregar el dispositivo recién creado a la lista global
                 dispositivos.add(nuevo);
             }
 
+            // Mostrar resumen final de lo importado
             System.out.println("\n=== RESUMEN DE IMPORTACIÓN ===");
             System.out.println("Servidores importados: " + countServ);
             System.out.println("Endpoints importados: " + countEndp);
             System.out.println("Routers importados: " + countRout);
+
+            // Mostrar cuántas líneas se ignoraron, si las hubo
             if (countOtros > 0)
                 System.out.println("Líneas ignoradas (tipo desconocido): " + countOtros);
+
+            // Mostrar total agregado al sistema
             System.out.println("Total dispositivos agregados: " +
                     (countServ + countEndp + countRout));
 
         } catch (Exception e) {
+            // Si ocurre cualquier error en lectura, mostrar detalle
             System.out.println("Error importando: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
-
-    private static Vulnerabilidad buscarVulnPorId(int id) {
-        for (Vulnerabilidad v : vulnerabilidades)
-            if (v.getId() == id) return v;
-        return null;
-    }
-
-    private static Dispositivo buscarDispPorId(String id) {
-        for (Dispositivo d : dispositivos)
-            if (d.getId() == id) return d;
-        return null;
-    }
-
-    private static OcurrenciaVulnerabilidad buscarOcurrenciaPorId(int id) {
-        for (OcurrenciaVulnerabilidad o : ocurrencias)
-            if (o.getId() == id) return o;
-        return null;
-    }
-
-    private static Dispositivo crearDispositivoDesdeExport(String tipo, String id, String nombre, String detalles) {
-
-        switch (tipo) {
-            case "Servidor":
-                // detalles = sistema operativo
-                return new Servidor(nombre, detalles);
-
-            case "Endpoint":
-                // detalles = usuario asignado
-                return new Endpoint(nombre, detalles);
-
-            case "Router":
-                // detalles = número de puertos
-                int puertos = Integer.parseInt(detalles.trim());
-                return new Router(nombre, puertos);
-
-            case "Impresora":
-                // detalles = modelo de impresora
-                return new Impresora(nombre, detalles);
-
-            default:
-                System.out.println("Tipo desconocido: " + tipo + " — creando Servidor genérico.");
-                return new Servidor(nombre, detalles);
-        }
-    }
-
-    private static Vulnerabilidad buscarVulnPorNombre(String nombre) {
-        for (Vulnerabilidad v : vulnerabilidades) {
-            if (v.getNombre().equalsIgnoreCase(nombre)) {
-                return v;
-            }
-        }
-        throw new NoSuchElementException("No existe vulnerabilidad con nombre: " + nombre);
-    }
-
-    private static Dispositivo buscarDispPorNombre(String nombre) {
-        for (Dispositivo d : dispositivos) {
-            if (d.getNombre().equalsIgnoreCase(nombre)) {
-                return d;
-            }
-        }
-        throw new NoSuchElementException("No existe dispositivo con nombre: " + nombre);
-    }
-
-
-
-
 
 }
