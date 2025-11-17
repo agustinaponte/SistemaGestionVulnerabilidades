@@ -7,6 +7,11 @@ import sistemagestionvulnerabilidades.dispositivos.Router;
 import sistemagestionvulnerabilidades.dispositivos.Servidor;
 import sistemagestionvulnerabilidades.auditoria.Auditable;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -65,6 +70,16 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
                     generarAuditoriaCompleta(scanner);
                     break;
                 case 6:
+                    System.out.print("Ingrese nombre del archivo para exportar: ");
+                    String archivoExp = scanner.nextLine();
+                    exportar(archivoExp);
+                    break;
+                case 7:
+                    System.out.print("Ingrese nombre del archivo para importar: ");
+                    String archivoImp = scanner.nextLine();
+                    importar(archivoImp);
+                    break;
+                case 0:
                     salir = true;
                     System.out.println("Saliendo del sistema...");
                     break;
@@ -95,7 +110,9 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
             "3. Cargar una nueva acción",
             "4. Generar informe completo",
             "5. Generar informe de auditoria",
-            "6. Salir",
+            "6. Exportar datos",
+            "7. Importar datos",
+            "0. Salir",
         };
         int seleccion = 0;
 
@@ -532,5 +549,162 @@ public class Main { // Clase principal del sistema de gestión de vulnerabilidad
         System.out.println("Dispositivo cargado exitosamente con ID: " + dispositivo.getId());
         return dispositivo;
     }
+
+    private static void exportar(String nombreArchivo) {
+        try (PrintWriter pw = new PrintWriter(new FileWriter(nombreArchivo))) {
+
+            for (Dispositivo d : dispositivos) {
+                if (d instanceof Servidor serv) {
+                    pw.println("SERVIDOR;" + serv.getNombre() + ";");
+                } else if (d instanceof Endpoint ep) {
+                    pw.println("ENDPOINT;" + ep.getNombre() + ";");
+                } else if (d instanceof Router rt) {
+                    pw.println("ROUTER;" + rt.getNombre() + ";");
+                } else if (d instanceof Impresora imp) {
+                    pw.println("IMPRESORA;" + imp.getNombre() + ";");
+                }
+            }
+
+            System.out.println("Exportación completada correctamente.");
+
+        } catch (Exception e) {
+            System.out.println("Error exportando dispositivos: " + e.getMessage());
+        }
+    }
+
+    private static void importar(String nombreArchivo) {
+        int countServ = 0;
+        int countEndp = 0;
+        int countRout = 0;
+        int countOtros = 0;
+        
+        try (BufferedReader br = new BufferedReader(new FileReader(nombreArchivo))) {
+
+            String linea;
+
+            while ((linea = br.readLine()) != null) {
+                linea = linea.trim();
+
+                if (linea.isEmpty()) continue;
+                if (!linea.contains(";")) continue;
+
+                String[] partes = linea.split(";");
+                if (partes.length < 2) continue;
+
+                String tipo = partes[0].trim().toUpperCase();
+                String nombre = partes[1].trim();
+
+                Dispositivo nuevo = null;
+
+                switch (tipo) {
+                    case "SERVIDOR":
+                        // No tenemos dato del SO, usamos uno genérico
+                        nuevo = new Servidor(nombre, "No especificado");
+                        countServ++;
+                        break;
+
+                    case "ENDPOINT":
+                        // No tenemos usuario asignado, usamos uno genérico
+                        nuevo = new Endpoint(nombre, "Usuario");
+                        countEndp++;
+                        break;
+
+                    case "ROUTER":
+                        // No tenemos cantidad de puertos, usamos un número genérico
+                        nuevo = new Router(nombre, 4);
+                        countRout++;
+                        break;
+
+                    default:
+                        // Por si más adelante agregas más tipos
+                        System.out.println("Tipo desconocido, ignorando: " + tipo);
+                        countOtros++;
+                        continue;
+                }
+
+                dispositivos.add(nuevo);
+            }
+
+            System.out.println("\n=== RESUMEN DE IMPORTACIÓN ===");
+            System.out.println("Servidores importados: " + countServ);
+            System.out.println("Endpoints importados: " + countEndp);
+            System.out.println("Routers importados: " + countRout);
+            if (countOtros > 0)
+                System.out.println("Líneas ignoradas (tipo desconocido): " + countOtros);
+            System.out.println("Total dispositivos agregados: " +
+                    (countServ + countEndp + countRout));
+
+        } catch (Exception e) {
+            System.out.println("Error importando: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+
+    private static Vulnerabilidad buscarVulnPorId(int id) {
+        for (Vulnerabilidad v : vulnerabilidades)
+            if (v.getId() == id) return v;
+        return null;
+    }
+
+    private static Dispositivo buscarDispPorId(String id) {
+        for (Dispositivo d : dispositivos)
+            if (d.getId() == id) return d;
+        return null;
+    }
+
+    private static OcurrenciaVulnerabilidad buscarOcurrenciaPorId(int id) {
+        for (OcurrenciaVulnerabilidad o : ocurrencias)
+            if (o.getId() == id) return o;
+        return null;
+    }
+
+    private static Dispositivo crearDispositivoDesdeExport(String tipo, String id, String nombre, String detalles) {
+
+        switch (tipo) {
+            case "Servidor":
+                // detalles = sistema operativo
+                return new Servidor(nombre, detalles);
+
+            case "Endpoint":
+                // detalles = usuario asignado
+                return new Endpoint(nombre, detalles);
+
+            case "Router":
+                // detalles = número de puertos
+                int puertos = Integer.parseInt(detalles.trim());
+                return new Router(nombre, puertos);
+
+            case "Impresora":
+                // detalles = modelo de impresora
+                return new Impresora(nombre, detalles);
+
+            default:
+                System.out.println("Tipo desconocido: " + tipo + " — creando Servidor genérico.");
+                return new Servidor(nombre, detalles);
+        }
+    }
+
+    private static Vulnerabilidad buscarVulnPorNombre(String nombre) {
+        for (Vulnerabilidad v : vulnerabilidades) {
+            if (v.getNombre().equalsIgnoreCase(nombre)) {
+                return v;
+            }
+        }
+        throw new NoSuchElementException("No existe vulnerabilidad con nombre: " + nombre);
+    }
+
+    private static Dispositivo buscarDispPorNombre(String nombre) {
+        for (Dispositivo d : dispositivos) {
+            if (d.getNombre().equalsIgnoreCase(nombre)) {
+                return d;
+            }
+        }
+        throw new NoSuchElementException("No existe dispositivo con nombre: " + nombre);
+    }
+
+
+
+
 
 }
